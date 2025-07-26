@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky install",
-    "test": "jest",
+    "test": "cross-env NODE_ICU_DATA=node_modules/full-icu jest --passWithNoTests --no-cache --runInBand",
+    "test:watch": "yarn test --watch",
+    "test:staged": "yarn test --findRelatedTests",
+    "test:ci": "yarn test --coverage",
     "start:dev": "cross-env NODE_ENV=development node dist/main.js",
     "start:prod": "cross-env NODE_ENV=production node dist/main.js",
     "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
@@ -35,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "cross-env": "^10.0.0",
     "eslint": "^9.32.0",
     "globals": "^16.3.0",
@@ -60,3 +64,4 @@
     "tsyringe": "^4.10.0"
   }
 }
+

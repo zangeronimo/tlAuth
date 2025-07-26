@@ -1,5 +1,8 @@
 node_modules
 dist
+coverage
+.husky/_
+yarn.error.log
 .vscode
 .env
 .env.development
