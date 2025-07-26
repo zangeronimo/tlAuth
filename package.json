@@ -10,7 +10,9 @@
     "dev": "cross-env NODE_ENV=development ts-node-dev -r tsconfig-paths/register --inspect --transpile-only --ignore-watch node_modules src/main.ts",
     "migrate:up": "cross-env NODE_ENV=development node migrate-runner.js up",
     "migrate:create": "cross-env NODE_ENV=development node migrate-runner.js create",
-    "migrate:down": "cross-env NODE_ENV=development node migrate-runner.js down"
+    "migrate:down": "cross-env NODE_ENV=development node migrate-runner.js down",
+    "lint": "eslint .",
+    "lint:fix": "yarn lint --fix"
   },
   "keywords": [
     "authentication",
@@ -30,14 +32,19 @@
   "license": "MIT",
   "description": "Multi-tenant authentication and access control system using Express and PostgreSQL, with RBAC support across multiple systems and clients.",
   "devDependencies": {
+    "@eslint/js": "^9.32.0",
     "@types/express": "^5.0.3",
     "cross-env": "^10.0.0",
+    "eslint": "^9.32.0",
+    "globals": "^16.3.0",
     "jest": "^30.0.5",
     "node-pg-migrate": "^8.0.3",
+    "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
   },
   "dependencies": {
     "dotenv": "^17.2.1",

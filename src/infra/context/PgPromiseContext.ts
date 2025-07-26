@@ -22,7 +22,7 @@ export class PgPromiseContext implements DbContext {
       const transactions = [];
       for (const transaction of this.transactions) {
         transactions.push(
-          await t.query(transaction.statement, transaction.data)
+          await t.query(transaction.statement, transaction.data),
         );
       }
       return t.batch(transactions);

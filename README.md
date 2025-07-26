@@ -74,6 +74,6 @@ O `tlAuth` é uma solução de identidade inspirada em arquiteturas modernas de 
 
 ## ✍️ Autor
 
-Desenvolvido por **Luciano Zangeronimo**  
-🔗 [linkedin.com/in/zangeronimo](https://linkedin.com/in/zangeronimo)  
+Desenvolvido por **Luciano Zangeronimo**
+🔗 [linkedin.com/in/zangeronimo](https://linkedin.com/in/zangeronimo)
 📧 zangeronimo@gmail.com
