@@ -1,7 +1,8 @@
-import { ProviderExtension } from "./ProviderExtension";
+import { ProviderExtensions } from './provider.extensions'
 
 export class ExtensionDI {
   static init = () => {
-    ProviderExtension.init();
-  };
+    ProviderExtensions.init()
+  }
 }
+

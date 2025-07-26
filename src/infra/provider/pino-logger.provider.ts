@@ -1,4 +1,4 @@
-import { LoggerProvider } from '@domain/interface/provider/LoggerProvider'
+import { LoggerProvider } from '@domain/interface/provider'
 import pino from 'pino'
 
 const logger = pino({

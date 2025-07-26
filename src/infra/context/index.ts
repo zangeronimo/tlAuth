@@ -1,2 +1,3 @@
-export * from "./DbContext";
-export * from "./PgPromiseContext";
+export * from './db.context'
+export * from './pg-promise.provider'
+

@@ -4,8 +4,8 @@ import dotenv from 'dotenv'
 import { ExtensionDI } from '@infra/extensions'
 import { container } from 'tsyringe'
 import { DbContext } from '@infra/context'
-import { MainController } from '@api/controllers/MainController'
-import { LoggerProvider } from '@domain/interface/provider/LoggerProvider'
+import { MainController } from '@api/controllers/main.controller'
+import { LoggerProvider } from '@domain/interface/provider'
 
 const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env'
 dotenv.config({ path: envFile })
