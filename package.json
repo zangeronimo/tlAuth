@@ -3,10 +3,48 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "start:dev": "cross-env NODE_ENV=development node dist/main.js",
+    "start:prod": "cross-env NODE_ENV=production node dist/main.js",
+    "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
+    "dev": "cross-env NODE_ENV=development ts-node-dev -r tsconfig-paths/register --inspect --transpile-only --ignore-watch node_modules src/main.ts",
+    "migrate:up": "cross-env NODE_ENV=development node migrate-runner.js up",
+    "migrate:create": "cross-env NODE_ENV=development node migrate-runner.js create",
+    "migrate:down": "cross-env NODE_ENV=development node migrate-runner.js down"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "keywords": [
+    "authentication",
+    "rbac",
+    "access-control",
+    "express",
+    "postgresql",
+    "multi-tenant",
+    "saas",
+    "user-management",
+    "auth-system",
+    "nodejs",
+    "jwt",
+    "authorization"
+  ],
+  "author": "Luciano Zangeronimo - <zangeronimo@gmail.com>",
+  "license": "MIT",
+  "description": "Multi-tenant authentication and access control system using Express and PostgreSQL, with RBAC support across multiple systems and clients.",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "cross-env": "^10.0.0",
+    "jest": "^30.0.5",
+    "node-pg-migrate": "^8.0.3",
+    "ts-jest": "^29.4.0",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg-promise": "^11.15.0",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0"
+  }
 }
