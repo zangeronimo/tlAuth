@@ -1,40 +1,45 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-export const shorthands = undefined;
+export const shorthands = undefined
 
-export const up = (pgm) => {
-  pgm.sql(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+export const up = pgm => {
+  pgm.sql(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`)
 
-  pgm.createTable("companies", {
+  pgm.createTable('companies', {
     id: {
-      type: "uuid",
+      type: 'uuid',
       primaryKey: true,
-      default: pgm.func("gen_random_uuid()"),
+      default: pgm.func('gen_random_uuid()'),
     },
-    name: { type: "varchar(150)", notNull: true },
-    slug: { type: "varchar(100)", notNull: true, unique: true },
-    is_active: { type: "boolean", default: true },
+    name: { type: 'varchar(150)', notNull: true },
+    slug: { type: 'varchar(100)', notNull: true },
+    is_active: { type: 'SMALLINT', default: 1 },
     created_at: {
-      type: "timestamp",
+      type: 'timestamp',
       notNull: true,
-      default: pgm.func("current_timestamp"),
+      default: pgm.func('current_timestamp'),
     },
     updated_at: {
-      type: "timestamp",
+      type: 'timestamp',
       notNull: true,
-      default: pgm.func("current_timestamp"),
+      default: pgm.func('current_timestamp'),
     },
     deleted_at: {
-      type: "timestamp",
+      type: 'timestamp',
       notNull: false,
       default: null,
     },
-  });
+  })
 
-  pgm.createIndex("companies", "slug", { unique: true });
-};
+  pgm.sql(`
+    CREATE UNIQUE INDEX unique_slug_not_deleted
+    ON companies (slug)
+    WHERE deleted_at IS NULL;
+  `)
+}
 
-export const down = (pgm) => {
-  pgm.dropTable("companies");
-};
+export const down = pgm => {
+  pgm.dropTable('companies')
+}
+

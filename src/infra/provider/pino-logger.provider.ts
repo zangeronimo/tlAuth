@@ -1,6 +1,8 @@
 import { LoggerProvider } from '@domain/interface/provider'
 import pino, { Logger } from 'pino'
+import { injectable } from 'tsyringe'
 
+@injectable()
 export class PinoLoggerProvider implements LoggerProvider {
   private logger: Logger
 
