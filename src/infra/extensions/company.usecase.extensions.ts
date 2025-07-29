@@ -8,7 +8,7 @@ import { CompanyDto } from '@domain/dto/company.dto'
 import { type UseCase } from '@domain/interface/use.case'
 import { container } from 'tsyringe'
 
-export class UseCaseExtensions {
+export class CompanyUseCaseExtensions {
   static init() {
     container.registerSingleton<UseCase<'', CompanyDto[]>>(
       'CompanyGetAllUC',

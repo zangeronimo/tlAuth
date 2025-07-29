@@ -30,7 +30,7 @@ describe('User Entity', () => {
       'Luciano Zangeronimo',
       'zangeronimo@gmail.com',
       ActiveEnum.ACTIVE,
-      'abc',
+      ['abc'],
     )
     expect(sut).toBeInstanceOf(User)
     expect(sut).toBeTruthy()
@@ -45,7 +45,7 @@ describe('User Entity', () => {
   })
   it('should receive an error on create', () => {
     expect(() =>
-      User.create('', 'zangeronimo@gmail.com', ActiveEnum.ACTIVE, ''),
+      User.create('', 'zangeronimo@gmail.com', ActiveEnum.ACTIVE, []),
     ).toThrow(Messages.notFound('Required field'))
   })
   it('should receive an error on restore', () => {
