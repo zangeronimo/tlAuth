@@ -3,12 +3,13 @@ import { ActiveEnum, numberToActiveEnum } from '@domain/enum/active.enum'
 import { Messages } from '@application/messages/message'
 import { randomUUID } from 'crypto'
 import { Email } from '@domain/valueObjects'
+import { Company } from './company'
 
 export class User extends BaseEntity {
   private _name: string
   private _email: Email
   private _isActive: ActiveEnum
-  private _companies: string[]
+  private _companies: Company[]
 
   get name() {
     return this._name
@@ -28,7 +29,7 @@ export class User extends BaseEntity {
     name: string,
     email: Email,
     isActive: ActiveEnum,
-    companies: string[],
+    companies: Company[],
     createdAt: Date,
     updatedAt: Date,
     deletedAt?: Date,
@@ -46,7 +47,7 @@ export class User extends BaseEntity {
     name: string,
     email: string,
     isActive: ActiveEnum,
-    companies: string[],
+    companies: Company[],
   ) {
     const id = randomUUID()
     return new User(
@@ -65,7 +66,7 @@ export class User extends BaseEntity {
     name: string,
     email: string,
     isActive: number,
-    companies: string[],
+    companies: Company[],
     createdAt: string,
     updatedAt: string,
     deletedAt?: string,
@@ -81,7 +82,7 @@ export class User extends BaseEntity {
       deletedAt ? new Date(deletedAt) : undefined,
     )
   }
-  update(name: string, email: string, active: number, companies: string[]) {
+  update(name: string, email: string, active: number, companies: Company[]) {
     this._name = name
     this._email = Email.create(email)
     this._isActive = numberToActiveEnum(active)

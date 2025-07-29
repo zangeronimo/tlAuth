@@ -5,9 +5,9 @@ import { injectable } from 'tsyringe'
 
 @injectable()
 export class CompanyInMemoryRepository implements ICompanyRepository {
-  companies: Company[]
+  companies: Company[] = []
   constructor() {
-    this.companies = []
+    this.clear()
   }
   async createAsync(company: Company): Promise<Company> {
     this.companies.push(company)
@@ -47,6 +47,9 @@ export class CompanyInMemoryRepository implements ICompanyRepository {
   }
   clear() {
     this.companies = []
+  }
+  seed(companies: Company[]) {
+    this.companies = companies
   }
 }
 

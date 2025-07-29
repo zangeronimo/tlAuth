@@ -58,6 +58,9 @@ export class UserRouters {
       if (e instanceof EmailAlreadyExistsError) {
         return res.status(409).json({ message: e.message })
       }
+      if (e instanceof NotFoundError) {
+        return res.status(404).json({ message: e.message })
+      }
       res.status(400).json({ message: e.message })
     }
   }
