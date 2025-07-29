@@ -16,6 +16,7 @@ export default defineConfig([
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
     },
+    ignores: ['**/*.js', 'node_modules/**', 'dist/**'],
   },
 ])
 
