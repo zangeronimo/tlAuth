@@ -1,4 +1,4 @@
-import { Company } from '@domain/entity/company'
+import { Company } from '@domain/entity'
 import { Slug } from '@domain/valueObjects'
 
 export interface ICompanyRepository {

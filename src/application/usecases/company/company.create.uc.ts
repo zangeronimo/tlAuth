@@ -1,5 +1,5 @@
 import { CompanyDto } from '@domain/dto/company.dto'
-import { Company } from '@domain/entity/company'
+import { Company } from '@domain/entity'
 import { numberToActiveEnum } from '@domain/enum/active.enum'
 import { SlugAlreadyExistsError } from '@domain/errors/slug.already.exists.error'
 import { type ICompanyRepository } from '@domain/interface/repository'

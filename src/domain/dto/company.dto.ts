@@ -1,4 +1,4 @@
-import { Company } from '@domain/entity/company'
+import { Company } from '@domain/entity'
 
 export class CompanyDto {
   static from(company: Company) {

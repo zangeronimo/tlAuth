@@ -1,146 +1,156 @@
-import { Company } from '@domain/entity'
-import { ICompanyRepository } from '@domain/interface/repository'
+import { System } from '@domain/entity'
+import { ISystemRepository } from '@domain/interface/repository'
 import { Slug } from '@domain/valueObjects'
 import { type DbContext } from '@infra/context'
 import { inject, injectable } from 'tsyringe'
 
 @injectable()
-export class CompanyRepository implements ICompanyRepository {
+export class SystemRepository implements ISystemRepository {
   constructor(
     @inject('DbContext')
     readonly db: DbContext,
   ) {}
 
-  async createAsync(company: Company): Promise<Company> {
+  async createAsync(system: System): Promise<System> {
     await this.db.queryAsync(
-      'insert into companies (id, name, slug, is_active, created_at, updated_at) values ($1, $2, $3, $4, $5, $6)',
+      'insert into systems (id, name, slug, is_active, created_at, updated_at) values ($1, $2, $3, $4, $5, $6)',
       [
-        company.id,
-        company.name,
-        company.slug.value,
-        company.isActive,
-        company.createdAt,
-        company.updatedAt,
+        system.id,
+        system.name,
+        system.slug.value,
+        system.isActive,
+        system.createdAt,
+        system.updatedAt,
       ],
     )
-    return company
+    return system
   }
 
-  async updateAsync(company: Company): Promise<Company> {
+  async updateAsync(system: System): Promise<System> {
     await this.db.queryAsync(
-      'update companies set name=$2, slug=$3, is_active=$4, updated_at=$5 where id=$1 and deleted_at is null',
+      'update systems set name=$2, slug=$3, description=$4, is_active=$5, updated_at=$6 where id=$1 and deleted_at is null',
       [
-        company.id,
-        company.name,
-        company.slug.value,
-        company.isActive,
-        company.updatedAt,
+        system.id,
+        system.name,
+        system.slug.value,
+        system.description,
+        system.isActive,
+        system.updatedAt,
       ],
     )
-    return company
+    return system
   }
 
-  async deleteAsync(company: Company): Promise<Company> {
-    await this.db.queryAsync('update companies set deleted_at=$2 where id=$1', [
-      company.id,
-      company.deletedAt,
+  async deleteAsync(system: System): Promise<System> {
+    await this.db.queryAsync('update systems set deleted_at=$2 where id=$1', [
+      system.id,
+      system.deletedAt,
     ])
-    return company
+    return system
   }
 
-  async getAllAsync(): Promise<Company[]> {
+  async getAllAsync(): Promise<System[]> {
     const where = 'deleted_at is null'
     const result: any[] = await this.db.queryAsync(
       `select
         id,
         name,
         slug,
+        description,
         is_active,
         created_at,
         updated_at,
         deleted_at
       from
-        companies
+        systems
       where ${where}
       `,
       [],
     )
-    const companies: Company[] = []
+    const systems: System[] = []
     result.forEach(data => {
-      const company = Company.restore(
+      const system = System.restore(
         data.id,
         data.name,
         data.slug,
+        data.description,
         data.is_active,
         data.created_at,
         data.updated_at,
         data.deleted_at,
+        [],
       )
-      companies.push(company)
+      systems.push(system)
     })
-    return companies
+    return systems
   }
 
-  async getBySlugAsync(slug: Slug): Promise<Company | undefined> {
+  async getBySlugAsync(slug: Slug): Promise<System | undefined> {
     const where = `slug = $1 and deleted_at is null`
     const [data] = await this.db.queryAsync(
       `select
         id,
         name,
         slug,
+        description,
         is_active,
         created_at,
         updated_at,
         deleted_at
       from
-        companies
+        systems
       where ${where}
       `,
       [slug.value],
     )
-    const company = data
-      ? Company.restore(
+    const system = data
+      ? System.restore(
           data.id,
           data.name,
           data.slug,
+          data.description,
           data.is_active,
           data.created_at,
           data.updated_at,
           data.deleted_at,
+          [],
         )
       : undefined
-    return company
+    return system
   }
 
-  async getByIdAsync(id: string): Promise<Company | undefined> {
+  async getByIdAsync(id: string): Promise<System | undefined> {
     const where = `id = $1 and deleted_at is null`
     const [data] = await this.db.queryAsync(
       `select
         id,
         name,
         slug,
+        description,
         is_active,
         created_at,
         updated_at,
         deleted_at
       from
-        companies
+        systems
       where ${where}
       `,
       [id],
     )
-    const company = data
-      ? Company.restore(
+    const system = data
+      ? System.restore(
           data.id,
           data.name,
           data.slug,
+          data.description,
           data.is_active,
           data.created_at,
           data.updated_at,
           data.deleted_at,
+          [],
         )
       : undefined
-    return company
+    return system
   }
 }
 

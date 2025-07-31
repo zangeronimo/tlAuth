@@ -12,9 +12,8 @@ export class Messages {
   static conflictField = (first: string, second: string) =>
     `${first} differente to ${second}.`
   static accessDenied = 'Access denied.'
-  static timesheet = {
-    EntryOpened: 'You already have another task opened.',
-    EntryRegisteredThisMinute: 'You already have registered at this minute.',
+  static system = {
+    moduleNotFound: "You need to add at least one module before activating the system."
   }
 }
 
