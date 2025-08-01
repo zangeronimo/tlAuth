@@ -3,29 +3,19 @@ import { DbContext } from './db.context'
 
 export class PgPromiseContext implements DbContext {
   connection: any
-  transactions: { statement: string; data: any }[]
 
   constructor() {
     this.connection = pgPromise()(atob(process.env.POSTGRES_URL!))
-    this.transactions = []
   }
 
-  queryAsync(statement: string, data: any, transaction = false): Promise<any> {
-    if (!transaction) return this.connection.query(statement, data)
-
-    this.transactions?.push({ statement, data })
-    return Promise.resolve()
+  queryAsync(statement: string, data?: any, tx?: any): Promise<any> {
+    const executor = tx || this.connection
+    return executor.query(statement, data)
   }
 
-  async commitAsync() {
-    await this.connection.tx(async (t: any) => {
-      const transactions = []
-      for (const transaction of this.transactions) {
-        transactions.push(
-          await t.query(transaction.statement, transaction.data),
-        )
-      }
-      return t.batch(transactions)
+  async withTransaction<T>(fn: (tx: any) => Promise<T>): Promise<T> {
+    return this.connection.tx(async (t: any) => {
+      return await fn(t)
     })
   }
 

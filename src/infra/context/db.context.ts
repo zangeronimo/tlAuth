@@ -1,7 +1,7 @@
 export interface DbContext {
-  connection: any;
-  transactions: { statement: string; data: any }[];
-  queryAsync(statement: string, data: any, transaction?: boolean): Promise<any>;
-  commitAsync(): Promise<void>;
-  closeAsync(): Promise<void>;
+  connection: any
+  queryAsync(statement: string, data?: any, tx?: any): Promise<any>
+  withTransaction<T>(fn: (tx: any) => Promise<T>): Promise<T>
+  closeAsync(): Promise<void>
 }
+
