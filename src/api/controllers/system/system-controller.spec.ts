@@ -28,6 +28,26 @@ describe('SystemController', () => {
     expect(res.body.slug).toBe('webeditor')
   })
 
+  it('should return 201 created in POST /systems with módules', async () => {
+    const res = await request(app)
+      .post(BASE_URL)
+      .send({
+        name: 'webEditor',
+        description: 'CMS',
+        modules: [
+          {
+            name: 'System',
+            description: 'Module to manager advanced configuration',
+            active: 1,
+          },
+        ],
+      })
+    expect(res.status).toBe(201)
+    expect(res.body.id).toBeDefined()
+    expect(res.body.slug).toBe('webeditor')
+    expect(res.body.modules).toHaveLength(1)
+  })
+
   it('should return an exception on create the same system twice', async () => {
     const SystemBody = {
       name: 'webEditor',
@@ -75,15 +95,105 @@ describe('SystemController', () => {
       name: created.body.name,
       description: created.body.description,
       active: created.body.active,
+      modules: [
+        {
+          name: 'System',
+          description: 'Module to manager the system configurations',
+          active: 1,
+        },
+      ],
     }
     const updated = await request(app)
       .put(`${BASE_URL}/${UpdateBody.id}`)
       .send(UpdateBody)
-
     const system = await request(app).get(`${BASE_URL}/${updated.body.id}`)
     expect(updated.status).toBe(200)
     expect(system.body.id).toBe(created.body.id)
     expect(system.body.id).toBe(created.body.id)
+    expect(system.body.modules).toHaveLength(1)
+  })
+
+  it('should update the modules of a persisted system', async () => {
+    const SystemBody = {
+      name: 'webEditor',
+      description: 'CMS',
+      modules: [
+        {
+          name: 'System',
+          description: 'Module to manager the system configurations',
+          active: 1,
+        },
+        {
+          name: 'institutional',
+          description: 'Module to manager the institutional page',
+          active: 1,
+        },
+      ],
+    }
+    const created = await request(app).post(BASE_URL).send(SystemBody)
+    const UpdateBody = {
+      id: created.body.id,
+      name: created.body.name,
+      description: created.body.description,
+      active: created.body.active,
+      modules: [
+        ...created.body.modules,
+        {
+          name: 'Culinary',
+          description: 'Module to manager the culinary page',
+          active: 1,
+        },
+      ],
+    }
+    const updated = await request(app)
+      .put(`${BASE_URL}/${UpdateBody.id}`)
+      .send(UpdateBody)
+    const system = await request(app).get(`${BASE_URL}/${updated.body.id}`)
+    expect(updated.status).toBe(200)
+    expect(system.body.id).toBe(created.body.id)
+    expect(system.body.id).toBe(created.body.id)
+    expect(system.body.modules).toHaveLength(3)
+  })
+
+  it('should update the modules of a persisted system', async () => {
+    const SystemBody = {
+      name: 'webEditor',
+      description: 'CMS',
+      modules: [
+        {
+          name: 'System',
+          description: 'Module to manager the system configurations',
+          active: 1,
+        },
+        {
+          name: 'institutional',
+          description: 'Module to manager the institutional page',
+          active: 1,
+        },
+      ],
+    }
+    const created = await request(app).post(BASE_URL).send(SystemBody)
+    const UpdateBody = {
+      id: created.body.id,
+      name: created.body.name,
+      description: created.body.description,
+      active: created.body.active,
+      modules: [
+        {
+          name: 'Culinary',
+          description: 'Module to manager the culinary page',
+          active: 1,
+        },
+      ],
+    }
+    const updated = await request(app)
+      .put(`${BASE_URL}/${UpdateBody.id}`)
+      .send(UpdateBody)
+    const system = await request(app).get(`${BASE_URL}/${updated.body.id}`)
+    expect(updated.status).toBe(200)
+    expect(system.body.id).toBe(created.body.id)
+    expect(system.body.id).toBe(created.body.id)
+    expect(system.body.modules).toHaveLength(1)
   })
 
   it('should receive an exception if param id not equal body id', async () => {

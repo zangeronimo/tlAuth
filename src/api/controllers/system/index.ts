@@ -1,4 +1,5 @@
 import { SystemDto } from '@domain/dto'
+import { ActiveEnum } from '@domain/enum/active.enum'
 import { ConflictError } from '@domain/errors/conflict.error'
 import { NotFoundError } from '@domain/errors/not.found.error'
 import { SlugAlreadyExistsError } from '@domain/errors/slug.already.exists.error'
@@ -19,10 +20,16 @@ export class SystemRouters {
   getAllUC = container.resolve<UseCase<'', SystemDto[]>>('SystemGetAllUC')
   getByIdUC =
     container.resolve<UseCase<string, SystemDto | undefined>>('SystemGetByIdUC')
-  createUC =
-    container.resolve<
-      UseCase<{ name: string; description: string }, SystemDto>
-    >('SystemCreateUC')
+  createUC = container.resolve<
+    UseCase<
+      {
+        name: string
+        description: string
+        modules?: { name: string; description: string; active: ActiveEnum }[]
+      },
+      SystemDto
+    >
+  >('SystemCreateUC')
   updateUC = container.resolve<
     UseCase<
       {
@@ -30,6 +37,7 @@ export class SystemRouters {
         name: string
         description: string
         active: number
+        modules?: { name: string; description: string; active: ActiveEnum }[]
       },
       SystemDto
     >
@@ -64,8 +72,12 @@ export class SystemRouters {
 
   private createAsync = async (req: Request, res: Response) => {
     try {
-      const { name, description } = req.body
-      const result = await this.createUC.executeAsync({ name, description })
+      const { name, description, modules } = req.body
+      const result = await this.createUC.executeAsync({
+        name,
+        description,
+        modules,
+      })
       res.status(201).json(result)
     } catch (e: any) {
       if (e instanceof SlugAlreadyExistsError) {
@@ -78,7 +90,7 @@ export class SystemRouters {
   private updateAsync = async (req: Request, res: Response) => {
     try {
       const { id: paramId } = req.params
-      const { id, name, description, active } = req.body
+      const { id, name, description, active, modules } = req.body
 
       if (id !== paramId) throw new ConflictError('Param ID', 'Body ID')
 
@@ -87,6 +99,7 @@ export class SystemRouters {
         name,
         description,
         active,
+        modules,
       })
       res.status(200).json(result)
     } catch (e: any) {

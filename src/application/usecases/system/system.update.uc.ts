@@ -1,4 +1,5 @@
 import { SystemDto } from '@domain/dto'
+import { ActiveEnum } from '@domain/enum/active.enum'
 import { NotFoundError } from '@domain/errors/not.found.error'
 import { SlugAlreadyExistsError } from '@domain/errors/slug.already.exists.error'
 import { type ISystemRepository } from '@domain/interface/repository'
@@ -10,6 +11,7 @@ type Props = {
   name: string
   description: string
   active: number
+  modules?: { name: string; description: string; active: ActiveEnum }[]
 }
 
 @injectable()
@@ -23,6 +25,7 @@ export class SystemUpdateUC implements UseCase<Props, SystemDto> {
     name,
     description,
     active,
+    modules,
   }: Props): Promise<SystemDto> {
     const system = await this.systemRepository.getByIdAsync(id)
     if (!system) throw new NotFoundError('System', id)
@@ -30,7 +33,7 @@ export class SystemUpdateUC implements UseCase<Props, SystemDto> {
     const systemSaved = await this.systemRepository.getBySlugAsync(system.slug)
     if (systemSaved && systemSaved.id !== id)
       throw new SlugAlreadyExistsError(system.slug.value!)
-    const result = await this.systemRepository.updateAsync(system)
+    const result = await this.systemRepository.updateAsync(system, modules)
     return SystemDto.from(result)
   }
 }
