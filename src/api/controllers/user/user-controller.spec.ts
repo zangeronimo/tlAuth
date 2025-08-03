@@ -9,6 +9,7 @@ import {
 import { Messages } from '@application/messages/message'
 import { Company } from '@domain/entity'
 import { CompanyDto } from '@domain/dto'
+import { SystemInMemoryRepository } from '@infra/repository/system-inmemory.repository'
 
 const BASE_URL = '/users'
 const VALID_COMPANY_ID = '2e9b49ca-e97b-497f-9d94-6adeddeeace7'
@@ -18,6 +19,7 @@ const COMPANY = Company.restore(
   'Company Name',
   'company-name',
   1,
+  [],
   `${new Date()}`,
   `${new Date()}`,
   undefined,
@@ -29,7 +31,7 @@ describe('UserController', () => {
   beforeAll(() => {
     repo = new UserInMemoryRepository()
     container.registerInstance('IUserRepository', repo)
-    repo2 = new CompanyInMemoryRepository()
+    repo2 = new CompanyInMemoryRepository(new SystemInMemoryRepository())
     container.registerInstance('ICompanyRepository', repo2)
     app = API.init()
     repo2.seed([COMPANY])

@@ -22,12 +22,15 @@ export class CompanyRouters {
       'CompanyGetByIdUC',
     )
   createUC =
-    container.resolve<UseCase<{ name: string; active: number }, CompanyDto>>(
-      'CompanyCreateUC',
-    )
+    container.resolve<
+      UseCase<{ name: string; active: number; systems: string[] }, CompanyDto>
+    >('CompanyCreateUC')
   updateUC =
     container.resolve<
-      UseCase<{ id: string; name: string; active: number }, CompanyDto>
+      UseCase<
+        { id: string; name: string; active: number; systems: string[] },
+        CompanyDto
+      >
     >('CompanyUpdateUC')
   deleteUC = container.resolve<UseCase<string, CompanyDto>>('CompanyDeleteUC')
   activeUC =
@@ -59,8 +62,8 @@ export class CompanyRouters {
 
   private createAsync = async (req: Request, res: Response) => {
     try {
-      const { name, active } = req.body
-      const result = await this.createUC.executeAsync({ name, active })
+      const { name, active, systems } = req.body
+      const result = await this.createUC.executeAsync({ name, active, systems })
       res.status(201).json(result)
     } catch (e: any) {
       if (e instanceof SlugAlreadyExistsError) {
@@ -73,11 +76,16 @@ export class CompanyRouters {
   private updateAsync = async (req: Request, res: Response) => {
     try {
       const { id: paramId } = req.params
-      const { id, name, active } = req.body
+      const { id, name, active, systems } = req.body
 
       if (id !== paramId) throw new ConflictError('Param ID', 'Body ID')
 
-      const result = await this.updateUC.executeAsync({ id, name, active })
+      const result = await this.updateUC.executeAsync({
+        id,
+        name,
+        active,
+        systems,
+      })
       res.status(200).json(result)
     } catch (e: any) {
       if (e instanceof ConflictError) {

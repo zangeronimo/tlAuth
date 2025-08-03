@@ -4,14 +4,26 @@ import request from 'supertest'
 import { Messages } from '@application/messages/message'
 import { Express } from 'express'
 import { CompanyInMemoryRepository } from '@infra/repository/company-inmemory.repository'
+import { SystemInMemoryRepository } from '@infra/repository/system-inmemory.repository'
+import { System } from '@domain/entity'
 
 const BASE_URL = '/companies'
 describe('CompanyController', () => {
   let app: Express
   let repo: CompanyInMemoryRepository
+  let systemRepo: SystemInMemoryRepository
   beforeAll(() => {
-    repo = new CompanyInMemoryRepository()
+    systemRepo = new SystemInMemoryRepository()
+    repo = new CompanyInMemoryRepository(systemRepo)
     container.registerInstance('ICompanyRepository', repo)
+    container.registerInstance('ISystemRepository', systemRepo)
+    systemRepo.seed([
+      System.create('System1', 'Description1'),
+      System.create('System2', 'Description2'),
+      System.create('System3', 'Description3'),
+      System.create('System4', 'Description4'),
+    ])
+
     app = API.init()
   })
   beforeEach(() => {
@@ -26,6 +38,22 @@ describe('CompanyController', () => {
     expect(res.status).toBe(201)
     expect(res.body.id).toBeDefined()
     expect(res.body.slug).toBe('tudo-linux')
+    expect(res.body.systems).toHaveLength(systemRepo.systems.length)
+  })
+
+  it('should return 201 created in POST /companies', async () => {
+    const res = await request(app)
+      .post(BASE_URL)
+      .send({
+        name: 'Tudo Linux',
+        active: 1,
+        systems: [systemRepo.systems[0].id],
+      })
+    expect(res.status).toBe(201)
+    expect(res.body.id).toBeDefined()
+    expect(res.body.slug).toBe('tudo-linux')
+    expect(res.body.systems).toHaveLength(systemRepo.systems.length)
+    expect(res.body.systems[0].checked).toBeTruthy()
   })
 
   it('should return an exception on create the same company twice', async () => {
@@ -55,6 +83,7 @@ describe('CompanyController', () => {
       `${BASE_URL}/${companyCreated.body.id}`,
     )
     expect(company.body.id).toBe(companyCreated.body.id)
+    expect(company.body.systems).toHaveLength(systemRepo.systems.length)
   })
 
   it('should return an exception if company not exist', async () => {
@@ -84,6 +113,7 @@ describe('CompanyController', () => {
     expect(company.body.id).toBe(created.body.id)
     expect(company.body.id).toBe(created.body.id)
     expect(company.body.active).toBe(UpdateBody.active)
+    expect(company.body.systems).toHaveLength(systemRepo.systems.length)
   })
 
   it('should receive an exception if param id not equal body id', async () => {

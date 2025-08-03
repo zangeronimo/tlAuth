@@ -19,7 +19,12 @@ export class CompanyActiveUC implements UseCase<Props, CompanyDto> {
     const company = await this.companyRepository.getByIdAsync(id)
     if (!company) throw new NotFoundError('Company', id)
     company.active(active)
-    const result = await this.companyRepository.updateAsync(company)
+    const result = await this.companyRepository.updateAsync(
+      company,
+      company.systems
+        .filter(companySystem => companySystem.checked)
+        .map(companySystem => companySystem.system.id),
+    )
     return CompanyDto.from(result)
   }
 }
