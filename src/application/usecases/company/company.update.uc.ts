@@ -1,5 +1,5 @@
 import { CompanyDto } from '@domain/dto/company.dto'
-import { System } from '@domain/entity'
+import { CompanySystems } from '@domain/entity'
 import { NotFoundError } from '@domain/errors/not.found.error'
 import { SlugAlreadyExistsError } from '@domain/errors/slug.already.exists.error'
 import {
@@ -13,7 +13,7 @@ type Props = {
   id: string
   name: string
   active: number
-  systems: string[]
+  systems: { id: string; modules: string[] }[]
 }
 
 @injectable()
@@ -30,11 +30,11 @@ export class CompanyUpdateUC implements UseCase<Props, CompanyDto> {
     active,
     systems = [],
   }: Props): Promise<CompanyDto> {
-    const companySystems: { system: System; checked: boolean }[] = []
-    for (const systemId of systems) {
-      const system = await this.systemRepository.getByIdAsync(systemId)
-      if (!system) throw new NotFoundError('System', systemId)
-      companySystems.push({ system, checked: true })
+    const companySystems: CompanySystems[] = []
+    for (const companySystem of systems) {
+      const system = await this.systemRepository.getByIdAsync(companySystem.id)
+      if (!system) throw new NotFoundError('System', companySystem.id)
+      companySystems.push(new CompanySystems(companySystem.id))
     }
     const company = await this.companyRepository.getByIdAsync(id)
     if (!company) throw new NotFoundError('Company', id)
@@ -44,8 +44,9 @@ export class CompanyUpdateUC implements UseCase<Props, CompanyDto> {
     )
     if (companySaved && companySaved.id !== id)
       throw new SlugAlreadyExistsError(company.slug.value!)
-    const result = await this.companyRepository.updateAsync(company, systems)
-    return CompanyDto.from(result)
+    const result = await this.companyRepository.updateAsync(company)
+    const allSystems = await this.systemRepository.getAllAsync()
+    return CompanyDto.from(result, allSystems)
   }
 }
 

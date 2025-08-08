@@ -2,13 +2,14 @@ import { Messages } from '@application/messages/message'
 import { User } from './user'
 import { ActiveEnum } from '@domain/enum/active.enum'
 import { randomUUID } from 'crypto'
+import { Company } from './company'
 
 const SUT = (
   id = randomUUID(),
   name = 'Luciano Zangeronimo',
   email = 'zangeronimo@gmail.com',
   isActive = ActiveEnum.ACTIVE,
-  companies = ['abc'],
+  companies = [{ id: 'abc' } as Company],
   createdAt = Date.now().toString(),
   updatedAt = Date.now().toString(),
   deletedAt?: string,
@@ -30,7 +31,7 @@ describe('User Entity', () => {
       'Luciano Zangeronimo',
       'zangeronimo@gmail.com',
       ActiveEnum.ACTIVE,
-      ['abc'],
+      [{ id: 'abc' } as Company],
     )
     expect(sut).toBeInstanceOf(User)
     expect(sut).toBeTruthy()

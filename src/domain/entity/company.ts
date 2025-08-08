@@ -3,13 +3,13 @@ import { ActiveEnum, numberToActiveEnum } from '@domain/enum/active.enum'
 import { Messages } from '@application/messages/message'
 import { randomUUID } from 'crypto'
 import { Slug } from '@domain/valueObjects'
-import { System } from './system'
+import { CompanySystems } from './company-systems'
 
 export class Company extends BaseEntity {
   private _name: string
   private _slug: Slug
   private _isActive: ActiveEnum
-  private _companySystems: { system: System; checked: boolean }[]
+  private _companySystems: CompanySystems[]
 
   get name() {
     return this._name
@@ -29,7 +29,7 @@ export class Company extends BaseEntity {
     name: string,
     slug: Slug,
     isActive: ActiveEnum,
-    companySystems: { system: System; checked: boolean }[],
+    companySystems: CompanySystems[],
     createdAt: Date,
     updatedAt: Date,
     deletedAt?: Date,
@@ -61,7 +61,7 @@ export class Company extends BaseEntity {
     name: string,
     slug: string,
     isActive: number,
-    companySystems: { system: System; checked: boolean }[],
+    companySystems: CompanySystems[],
     createdAt: string,
     updatedAt: string,
     deletedAt?: string,
@@ -77,11 +77,7 @@ export class Company extends BaseEntity {
       deletedAt ? new Date(deletedAt) : undefined,
     )
   }
-  update(
-    name: string,
-    active: number,
-    companySystems: { system: System; checked: boolean }[],
-  ) {
+  update(name: string, active: number, companySystems: CompanySystems[]) {
     this._name = name
     this._slug = Slug.create(name)
     this._isActive = numberToActiveEnum(active)
@@ -93,6 +89,14 @@ export class Company extends BaseEntity {
   }
   active(active: number) {
     this._isActive = numberToActiveEnum(active)
+  }
+  addCompanySystem(systemId: string, modules: string[] = []) {
+    if (this._companySystems.some(data => data.systemId === systemId)) {
+      throw new Error(`System "${systemId}" already assigned to this company.`)
+    }
+    const companySystem = new CompanySystems(systemId)
+    modules.forEach(moduleId => companySystem.addCompanyModules(moduleId))
+    this._companySystems.push(companySystem)
   }
 
   private _validate() {

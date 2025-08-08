@@ -47,13 +47,19 @@ describe('CompanyController', () => {
       .send({
         name: 'Tudo Linux',
         active: 1,
-        systems: [systemRepo.systems[0].id],
+        systems: [
+          {
+            id: systemRepo.systems[0].id,
+            modules: [systemRepo.systems[0].modules[0]?.id],
+          },
+        ],
       })
     expect(res.status).toBe(201)
     expect(res.body.id).toBeDefined()
     expect(res.body.slug).toBe('tudo-linux')
     expect(res.body.systems).toHaveLength(systemRepo.systems.length)
     expect(res.body.systems[0].checked).toBeTruthy()
+    //expect(res.body.systems[0].system.modules[0].checked).toBeTruthy()
   })
 
   it('should return an exception on create the same company twice', async () => {

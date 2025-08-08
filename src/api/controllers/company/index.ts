@@ -21,18 +21,28 @@ export class CompanyRouters {
     container.resolve<UseCase<string, CompanyDto | undefined>>(
       'CompanyGetByIdUC',
     )
-  createUC =
-    container.resolve<
-      UseCase<{ name: string; active: number; systems: string[] }, CompanyDto>
-    >('CompanyCreateUC')
-  updateUC =
-    container.resolve<
-      UseCase<
-        { id: string; name: string; active: number; systems: string[] },
-        CompanyDto
-      >
-    >('CompanyUpdateUC')
-  deleteUC = container.resolve<UseCase<string, CompanyDto>>('CompanyDeleteUC')
+  createUC = container.resolve<
+    UseCase<
+      {
+        name: string
+        active: number
+        systems: { id: string; modules: string[] }[]
+      },
+      CompanyDto
+    >
+  >('CompanyCreateUC')
+  updateUC = container.resolve<
+    UseCase<
+      {
+        id: string
+        name: string
+        active: number
+        systems: { id: string; modules: string[] }[]
+      },
+      CompanyDto
+    >
+  >('CompanyUpdateUC')
+  deleteUC = container.resolve<UseCase<string, void>>('CompanyDeleteUC')
   activeUC =
     container.resolve<UseCase<{ id: string; active: number }, CompanyDto>>(
       'CompanyActiveUC',
@@ -104,8 +114,8 @@ export class CompanyRouters {
   private deleteAsync = async (req: Request, res: Response) => {
     try {
       const { id } = req.params
-      const result = await this.deleteUC.executeAsync(id)
-      res.status(204).json(result)
+      await this.deleteUC.executeAsync(id)
+      res.status(204).json()
     } catch (e: any) {
       if (e instanceof NotFoundError) {
         return res.status(404).json({ message: e.message })

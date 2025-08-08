@@ -1,6 +1,9 @@
 import { CompanyDto } from '@domain/dto/company.dto'
 import { NotFoundError } from '@domain/errors/not.found.error'
-import { type ICompanyRepository } from '@domain/interface/repository'
+import {
+  type ISystemRepository,
+  type ICompanyRepository,
+} from '@domain/interface/repository'
 import { UseCase } from '@domain/interface/use.case'
 import { inject, injectable } from 'tsyringe'
 
@@ -11,11 +14,16 @@ export class CompanyGetByIdUC
   constructor(
     @inject('ICompanyRepository')
     readonly companyRepository: ICompanyRepository,
+    @inject('ISystemRepository')
+    readonly systemRepository: ISystemRepository,
   ) {}
   async executeAsync(id: string): Promise<CompanyDto | undefined> {
     const company = await this.companyRepository.getByIdAsync(id)
     if (!company) throw new NotFoundError('Company', id)
-    const companyDto = company ? CompanyDto.from(company) : undefined
+    const allSystems = await this.systemRepository.getAllAsync()
+    const companyDto = company
+      ? CompanyDto.from(company, allSystems)
+      : undefined
     return companyDto
   }
 }

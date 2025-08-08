@@ -11,7 +11,8 @@ const SUT = (
   createdAt = Date.now().toString(),
   updatedAt = Date.now().toString(),
   deletedAt?: string,
-) => Company.restore(id, name, slug, isActive, createdAt, updatedAt, deletedAt)
+) =>
+  Company.restore(id, name, slug, isActive, [], createdAt, updatedAt, deletedAt)
 
 describe('Company Entity', () => {
   it('should be able to create a valid Company', () => {

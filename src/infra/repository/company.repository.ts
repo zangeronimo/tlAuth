@@ -1,4 +1,4 @@
-import { Company, System } from '@domain/entity'
+import { Company, CompanySystems } from '@domain/entity'
 import {
   ICompanyRepository,
   type ISystemRepository,
@@ -16,7 +16,7 @@ export class CompanyRepository implements ICompanyRepository {
     readonly systemRepository: ISystemRepository,
   ) {}
 
-  async createAsync(company: Company, systems: string[]): Promise<Company> {
+  async createAsync(company: Company): Promise<Company> {
     const companyId = await this.db.withTransaction(async tx => {
       const [createdCompany] = await this.db.queryAsync(
         'insert into companies (name, slug, is_active, created_at, updated_at) values ($1, $2, $3, $4, $5) RETURNING id',
@@ -31,15 +31,15 @@ export class CompanyRepository implements ICompanyRepository {
       )
       const companyId = createdCompany.id
       await this.deleteCompanySystemsAsync(companyId, tx)
-      for (const systemId of systems) {
-        await this.addCompanySystemsAsync(companyId, systemId, tx)
+      for (const companySystem of company.systems) {
+        await this.addCompanySystemsAsync(companyId, companySystem.systemId, tx)
       }
       return companyId
     })
     return (await this.getByIdAsync(companyId))!
   }
 
-  async updateAsync(company: Company, systems: string[]): Promise<Company> {
+  async updateAsync(company: Company): Promise<Company> {
     await this.db.withTransaction(async tx => {
       await this.db.queryAsync(
         'update companies set name=$2, slug=$3, is_active=$4, updated_at=$5 where id=$1 and deleted_at is null',
@@ -53,8 +53,12 @@ export class CompanyRepository implements ICompanyRepository {
         tx,
       )
       await this.deleteCompanySystemsAsync(company.id, tx)
-      for (const systemId of systems) {
-        await this.addCompanySystemsAsync(company.id, systemId, tx)
+      for (const companySystem of company.systems) {
+        await this.addCompanySystemsAsync(
+          company.id,
+          companySystem.systemId,
+          tx,
+        )
       }
     })
     return (await this.getByIdAsync(company.id))!
@@ -87,13 +91,13 @@ export class CompanyRepository implements ICompanyRepository {
     )
     const companies: Company[] = []
     for (const data of result) {
-      const companySystems = await this.getAllCompanySystems(data.id)
+      const companySystems = await this.getAllSystemsIdByCompanyIdAsync(data.id)
       const company = Company.restore(
         data.id,
         data.name,
         data.slug,
         data.is_active,
-        companySystems,
+        companySystems.map(systemId => new CompanySystems(systemId)),
         data.created_at,
         data.updated_at,
         data.deleted_at,
@@ -121,13 +125,13 @@ export class CompanyRepository implements ICompanyRepository {
       [slug.value],
     )
     if (!data) return undefined
-    const companySystems = await this.getAllCompanySystems(data.id)
+    const companySystems = await this.getAllSystemsIdByCompanyIdAsync(data.id)
     const company = Company.restore(
       data.id,
       data.name,
       data.slug,
       data.is_active,
-      companySystems,
+      companySystems.map(systemId => new CompanySystems(systemId)),
       data.created_at,
       data.updated_at,
       data.deleted_at,
@@ -153,14 +157,14 @@ export class CompanyRepository implements ICompanyRepository {
       [id],
     )
     if (!data) return undefined
-    const companySystems = await this.getAllCompanySystems(data.id)
+    const companySystems = await this.getAllSystemsIdByCompanyIdAsync(data.id)
     const company = data
       ? Company.restore(
           data.id,
           data.name,
           data.slug,
           data.is_active,
-          companySystems,
+          companySystems.map(systemId => new CompanySystems(systemId)),
           data.created_at,
           data.updated_at,
           data.deleted_at,
@@ -187,20 +191,6 @@ export class CompanyRepository implements ICompanyRepository {
       [companyId],
       tx,
     )
-  }
-
-  private async getAllCompanySystems(companyId: string) {
-    const result: { system: System; checked: boolean }[] = []
-    const companySystemsIds =
-      await this.getAllSystemsIdByCompanyIdAsync(companyId)
-    const allSystems = await this.systemRepository.getAllAsync()
-    for (const system of allSystems) {
-      result.push({
-        system,
-        checked: companySystemsIds?.some(systemId => systemId === system.id),
-      })
-    }
-    return result
   }
 
   private async getAllSystemsIdByCompanyIdAsync(

@@ -1,4 +1,4 @@
-import { Company, System } from '@domain/entity'
+import { Company, CompanySystems } from '@domain/entity'
 import {
   ICompanyRepository,
   type ISystemRepository,
@@ -12,28 +12,22 @@ export class CompanyInMemoryRepository implements ICompanyRepository {
   constructor(readonly systemRepo: ISystemRepository) {
     this.clear()
   }
-  async createAsync(company: Company, systems: []): Promise<Company> {
+  async createAsync(company: Company): Promise<Company> {
     const allSystems = await this.systemRepo.getAllAsync()
-    const companySystems: { system: System; checked: boolean }[] = []
+    const companySystems: CompanySystems[] = []
     for (const system of allSystems) {
-      const companySystem = {
-        system,
-        checked: systems?.some(systemId => systemId === system.id),
-      }
+      const companySystem = new CompanySystems(system.id)
       companySystems.push(companySystem)
     }
     company.update(company.name, company.isActive, companySystems)
     this.companies.push(company)
     return company
   }
-  async updateAsync(updated: Company, systems: []): Promise<Company> {
+  async updateAsync(updated: Company): Promise<Company> {
     const allSystems = await this.systemRepo.getAllAsync()
-    const companySystems: { system: System; checked: boolean }[] = []
+    const companySystems: CompanySystems[] = []
     for (const system of allSystems) {
-      const companySystem = {
-        system,
-        checked: systems?.some(systemId => systemId === system.id),
-      }
+      const companySystem = new CompanySystems(system.id)
       companySystems.push(companySystem)
     }
     updated.update(updated.name, updated.isActive, companySystems)
@@ -51,14 +45,9 @@ export class CompanyInMemoryRepository implements ICompanyRepository {
     const companies = []
     for (const company of activatedCompanies) {
       const allSystems = await this.systemRepo.getAllAsync()
-      const companySystems: { system: System; checked: boolean }[] = []
+      const companySystems: CompanySystems[] = []
       for (const system of allSystems) {
-        const companySystem = {
-          system,
-          checked: company.systems?.some(
-            companySystem => companySystem.system.id === system.id,
-          ),
-        }
+        const companySystem = new CompanySystems(system.id)
         companySystems.push(companySystem)
       }
       company.update(company.name, company.isActive, companySystems)

@@ -12,7 +12,7 @@ import { inject, injectable } from 'tsyringe'
 type Props = {
   name: string
   active: number
-  systems: string[]
+  systems: { id: string; modules: string[] }[]
 }
 
 @injectable()
@@ -33,8 +33,10 @@ export class CompanyCreateUC implements UseCase<Props, CompanyDto> {
       company.slug,
     )
     if (companySaved) throw new SlugAlreadyExistsError(company.slug.value!)
-    const result = await this.companyRepository.createAsync(company, systems)
-    return CompanyDto.from(result)
+    systems.forEach(system => company.addCompanySystem(system.id))
+    const result = await this.companyRepository.createAsync(company)
+    const allSystems = await this.systemRepository.getAllAsync()
+    return CompanyDto.from(result, allSystems)
   }
 }
 
