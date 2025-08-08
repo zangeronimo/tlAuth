@@ -1,4 +1,4 @@
-import { Company, CompanySystems } from '@domain/entity'
+import { Company, CompanyModules, CompanySystems } from '@domain/entity'
 import {
   ICompanyRepository,
   type ISystemRepository,
@@ -16,7 +16,10 @@ export class CompanyInMemoryRepository implements ICompanyRepository {
     const allSystems = await this.systemRepo.getAllAsync()
     const companySystems: CompanySystems[] = []
     for (const system of allSystems) {
-      const companySystem = new CompanySystems(system.id)
+      const companySystem = new CompanySystems(
+        system.id,
+        system.modules.map(module => new CompanyModules(module.id)),
+      )
       companySystems.push(companySystem)
     }
     company.update(company.name, company.isActive, companySystems)

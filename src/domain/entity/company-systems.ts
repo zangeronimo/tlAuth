@@ -1,7 +1,7 @@
 import { CompanyModules } from './'
 
 export class CompanySystems {
-  get Modules() {
+  get modules() {
     return this._modules
   }
 

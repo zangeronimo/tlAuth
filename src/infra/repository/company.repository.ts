@@ -1,4 +1,4 @@
-import { Company, CompanySystems } from '@domain/entity'
+import { Company, CompanyModules, CompanySystems } from '@domain/entity'
 import {
   ICompanyRepository,
   type ISystemRepository,
@@ -31,8 +31,10 @@ export class CompanyRepository implements ICompanyRepository {
       )
       const companyId = createdCompany.id
       await this.deleteCompanySystemsAsync(companyId, tx)
+      await this.deleteCompanyModulesAsync(companyId, tx)
       for (const companySystem of company.systems) {
         await this.addCompanySystemsAsync(companyId, companySystem.systemId, tx)
+        await this.addCompanyModulesAsync(companyId, companySystem.modules, tx)
       }
       return companyId
     })
@@ -53,12 +55,14 @@ export class CompanyRepository implements ICompanyRepository {
         tx,
       )
       await this.deleteCompanySystemsAsync(company.id, tx)
+      await this.deleteCompanyModulesAsync(company.id, tx)
       for (const companySystem of company.systems) {
         await this.addCompanySystemsAsync(
           company.id,
           companySystem.systemId,
           tx,
         )
+        await this.addCompanyModulesAsync(company.id, companySystem.modules, tx)
       }
     })
     return (await this.getByIdAsync(company.id))!
@@ -97,7 +101,7 @@ export class CompanyRepository implements ICompanyRepository {
         data.name,
         data.slug,
         data.is_active,
-        companySystems.map(systemId => new CompanySystems(systemId)),
+        companySystems,
         data.created_at,
         data.updated_at,
         data.deleted_at,
@@ -131,7 +135,7 @@ export class CompanyRepository implements ICompanyRepository {
       data.name,
       data.slug,
       data.is_active,
-      companySystems.map(systemId => new CompanySystems(systemId)),
+      companySystems,
       data.created_at,
       data.updated_at,
       data.deleted_at,
@@ -164,7 +168,7 @@ export class CompanyRepository implements ICompanyRepository {
           data.name,
           data.slug,
           data.is_active,
-          companySystems.map(systemId => new CompanySystems(systemId)),
+          companySystems,
           data.created_at,
           data.updated_at,
           data.deleted_at,
@@ -193,9 +197,31 @@ export class CompanyRepository implements ICompanyRepository {
     )
   }
 
+  private async addCompanyModulesAsync(
+    companyId: string,
+    companyModules: CompanyModules[],
+    tx: any,
+  ) {
+    for (const companyModule of companyModules) {
+      await this.db.queryAsync(
+        'insert into company_modules (company_id, module_id) values ($1, $2)',
+        [companyId, companyModule.moduleId],
+        tx,
+      )
+    }
+  }
+
+  private async deleteCompanyModulesAsync(companyId: string, tx: any) {
+    await this.db.queryAsync(
+      'delete from company_modules where company_id=$1',
+      [companyId],
+      tx,
+    )
+  }
+
   private async getAllSystemsIdByCompanyIdAsync(
-    companyId: any,
-  ): Promise<string[]> {
+    companyId: string,
+  ): Promise<CompanySystems[]> {
     const where = `company_id = $1`
     const dataSystems = await this.db.queryAsync(
       `select
@@ -206,8 +232,36 @@ export class CompanyRepository implements ICompanyRepository {
       `,
       [companyId],
     )
-    return dataSystems.length
-      ? dataSystems.map((data: any) => data.system_id)
+    const result: CompanySystems[] = []
+    for (const data of dataSystems) {
+      const modules = await this.getAllModulesIdByCompanyIdAsync(
+        companyId,
+        data.system_id,
+      )
+      const companySystem = new CompanySystems(data.system_id, modules)
+      result.push(companySystem)
+    }
+    return result
+  }
+
+  private async getAllModulesIdByCompanyIdAsync(
+    companyId: string,
+    systemId: string,
+  ): Promise<CompanyModules[]> {
+    const where = `cm.company_id = $1 and m.system_id = $2`
+    const dataModules = await this.db.queryAsync(
+      `select
+        cm.module_id,
+        m.system_id
+      from
+        company_modules cm
+        inner join modules m on m.id = cm.module_id and m.deleted_at is null
+      where ${where}
+      `,
+      [companyId, systemId],
+    )
+    return dataModules.length
+      ? dataModules.map((data: any) => new CompanyModules(data.module_id))
       : []
   }
 }

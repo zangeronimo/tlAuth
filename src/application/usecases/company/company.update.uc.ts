@@ -1,5 +1,5 @@
 import { CompanyDto } from '@domain/dto/company.dto'
-import { CompanySystems } from '@domain/entity'
+import { CompanyModules, CompanySystems } from '@domain/entity'
 import { NotFoundError } from '@domain/errors/not.found.error'
 import { SlugAlreadyExistsError } from '@domain/errors/slug.already.exists.error'
 import {
@@ -34,7 +34,12 @@ export class CompanyUpdateUC implements UseCase<Props, CompanyDto> {
     for (const companySystem of systems) {
       const system = await this.systemRepository.getByIdAsync(companySystem.id)
       if (!system) throw new NotFoundError('System', companySystem.id)
-      companySystems.push(new CompanySystems(companySystem.id))
+      companySystems.push(
+        new CompanySystems(
+          companySystem.id,
+          companySystem.modules.map(moduleId => new CompanyModules(moduleId)),
+        ),
+      )
     }
     const company = await this.companyRepository.getByIdAsync(id)
     if (!company) throw new NotFoundError('Company', id)

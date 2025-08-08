@@ -5,7 +5,8 @@ import { Messages } from '@application/messages/message'
 import { Express } from 'express'
 import { CompanyInMemoryRepository } from '@infra/repository/company-inmemory.repository'
 import { SystemInMemoryRepository } from '@infra/repository/system-inmemory.repository'
-import { System } from '@domain/entity'
+import { Module, System } from '@domain/entity'
+import { ActiveEnum } from '@domain/enum/active.enum'
 
 const BASE_URL = '/companies'
 describe('CompanyController', () => {
@@ -17,12 +18,23 @@ describe('CompanyController', () => {
     repo = new CompanyInMemoryRepository(systemRepo)
     container.registerInstance('ICompanyRepository', repo)
     container.registerInstance('ISystemRepository', systemRepo)
-    systemRepo.seed([
-      System.create('System1', 'Description1'),
-      System.create('System2', 'Description2'),
-      System.create('System3', 'Description3'),
-      System.create('System4', 'Description4'),
-    ])
+    const system1 = System.create('System1', 'Description1')
+    system1.addModule(
+      Module.create('Module1', '', ActiveEnum.ACTIVE, system1.id),
+    )
+    const system2 = System.create('System2', 'Description2')
+    system2.addModule(
+      Module.create('Module2', '', ActiveEnum.ACTIVE, system2.id),
+    )
+    const system3 = System.create('System3', 'Description3')
+    system3.addModule(
+      Module.create('Module3', '', ActiveEnum.ACTIVE, system3.id),
+    )
+    const system4 = System.create('System4', 'Description4')
+    system4.addModule(
+      Module.create('Module4', '', ActiveEnum.ACTIVE, system4.id),
+    )
+    systemRepo.seed([system1, system2, system3, system4])
 
     app = API.init()
   })
@@ -59,7 +71,7 @@ describe('CompanyController', () => {
     expect(res.body.slug).toBe('tudo-linux')
     expect(res.body.systems).toHaveLength(systemRepo.systems.length)
     expect(res.body.systems[0].checked).toBeTruthy()
-    //expect(res.body.systems[0].system.modules[0].checked).toBeTruthy()
+    expect(res.body.systems[0].modules[0].checked).toBeTruthy()
   })
 
   it('should return an exception on create the same company twice', async () => {

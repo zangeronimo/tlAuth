@@ -33,7 +33,9 @@ export class CompanyCreateUC implements UseCase<Props, CompanyDto> {
       company.slug,
     )
     if (companySaved) throw new SlugAlreadyExistsError(company.slug.value!)
-    systems.forEach(system => company.addCompanySystem(system.id))
+    systems.forEach(system =>
+      company.addCompanySystem(system.id, system.modules),
+    )
     const result = await this.companyRepository.createAsync(company)
     const allSystems = await this.systemRepository.getAllAsync()
     return CompanyDto.from(result, allSystems)

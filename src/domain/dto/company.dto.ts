@@ -9,10 +9,7 @@ export class CompanyDto {
       slug: company.slug.value,
       active: company.isActive,
       systems: systems.map(system =>
-        CompanySystemsDto.from(
-          system,
-          company.systems.some(data => data.systemId === system.id),
-        ),
+        CompanySystemsDto.from(system, company.systems),
       ),
       createdAt: company.createdAt.toISOString(),
       updatedAt: company.updatedAt.toISOString(),
