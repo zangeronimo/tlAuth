@@ -4,12 +4,14 @@ import { Messages } from '@application/messages/message'
 import { randomUUID } from 'crypto'
 import { Email } from '@domain/valueObjects'
 import { Company } from './company'
+import { Credential } from './'
 
 export class User extends BaseEntity {
   private _name: string
   private _email: Email
   private _isActive: ActiveEnum
   private _companies: Company[]
+  private _credentials: Credential[]
 
   get name() {
     return this._name
@@ -23,6 +25,9 @@ export class User extends BaseEntity {
   get companies() {
     return this._companies
   }
+  get credentials() {
+    return this._credentials
+  }
 
   private constructor(
     id: string,
@@ -30,6 +35,7 @@ export class User extends BaseEntity {
     email: Email,
     isActive: ActiveEnum,
     companies: Company[],
+    credentials: Credential[],
     createdAt: Date,
     updatedAt: Date,
     deletedAt?: Date,
@@ -39,6 +45,7 @@ export class User extends BaseEntity {
     this._email = email
     this._isActive = isActive
     this._companies = companies
+    this._credentials = credentials
 
     this._validate()
   }
@@ -48,6 +55,7 @@ export class User extends BaseEntity {
     email: string,
     isActive: ActiveEnum,
     companies: Company[],
+    credentials: Credential[],
   ) {
     const id = randomUUID()
     return new User(
@@ -56,6 +64,7 @@ export class User extends BaseEntity {
       Email.create(email),
       isActive,
       companies,
+      credentials,
       new Date(),
       new Date(),
     )
@@ -67,6 +76,7 @@ export class User extends BaseEntity {
     email: string,
     isActive: number,
     companies: Company[],
+    credentials: Credential[],
     createdAt: string,
     updatedAt: string,
     deletedAt?: string,
@@ -77,16 +87,24 @@ export class User extends BaseEntity {
       Email.restore(email),
       isActive ? ActiveEnum.ACTIVE : ActiveEnum.INACTIVE,
       companies,
+      credentials,
       new Date(createdAt),
       new Date(updatedAt),
       deletedAt ? new Date(deletedAt) : undefined,
     )
   }
-  update(name: string, email: string, active: number, companies: Company[]) {
+  update(
+    name: string,
+    email: string,
+    active: number,
+    companies: Company[],
+    credentials: Credential[],
+  ) {
     this._name = name
     this._email = Email.create(email)
     this._isActive = numberToActiveEnum(active)
     this._companies = companies
+    this._credentials = credentials
     this.updatedAt = new Date()
   }
   delete() {

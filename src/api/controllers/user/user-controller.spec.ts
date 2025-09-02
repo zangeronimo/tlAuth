@@ -7,7 +7,7 @@ import {
   UserInMemoryRepository,
 } from '@infra/repository'
 import { Messages } from '@application/messages/message'
-import { Company } from '@domain/entity'
+import { Company, System } from '@domain/entity'
 import { CompanyDto } from '@domain/dto'
 import { SystemInMemoryRepository } from '@infra/repository/system-inmemory.repository'
 
@@ -24,22 +24,37 @@ const COMPANY = Company.restore(
   `${new Date()}`,
   undefined,
 )
+const SYSTEM = System.restore(
+  '046fccc9-7d4e-42d9-bce5-8da7179bab5a',
+  'System Name',
+  'system-name',
+  '',
+  1,
+  `${new Date()}`,
+  `${new Date()}`,
+)
 let app: Express
-let repo: UserInMemoryRepository
-let repo2: CompanyInMemoryRepository
-describe('UserController', () => {
-  beforeAll(() => {
-    repo = new UserInMemoryRepository()
-    container.registerInstance('IUserRepository', repo)
-    repo2 = new CompanyInMemoryRepository(new SystemInMemoryRepository())
-    container.registerInstance('ICompanyRepository', repo2)
-    app = API.init()
-    repo2.seed([COMPANY])
-  })
-  beforeEach(() => {
-    repo.clear()
-  })
+let userRepository: UserInMemoryRepository
+let companyRepository: CompanyInMemoryRepository
+let systemRepository: SystemInMemoryRepository
 
+beforeAll(() => {
+  userRepository = new UserInMemoryRepository()
+  container.registerInstance('IUserRepository', userRepository)
+  systemRepository = new SystemInMemoryRepository()
+  systemRepository.seed([SYSTEM])
+  companyRepository = new CompanyInMemoryRepository(systemRepository)
+  container.registerInstance('ICompanyRepository', companyRepository)
+  container.registerInstance('ISystemRepository', systemRepository)
+  app = API.init()
+  companyRepository.seed([COMPANY])
+})
+
+beforeEach(() => {
+  userRepository.clear()
+})
+
+describe('test POST in /users', () => {
   it('should be able to create a new user', async () => {
     const email = 'zangeronimo@gmail.com'
     const res = await request(app)
@@ -48,11 +63,14 @@ describe('UserController', () => {
         name: 'Luciano Zangeronimo',
         email,
         companies: [VALID_COMPANY_ID],
+        credentials: [{ systemId: SYSTEM.id, password: '123', active: true }],
         active: 1,
       })
     expect(res.status).toBe(201)
     expect(res.body.id).toBeDefined()
     expect(res.body.email).toBe(email)
+    expect(res.body.credentials).toHaveLength(1)
+    expect(res.body.credentials[0].systemId).toEqual(SYSTEM.id)
   })
 
   it('should receive an exception if try add the same user twice', async () => {
@@ -63,6 +81,7 @@ describe('UserController', () => {
         name: 'Luciano Zangeronimo',
         email,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
         active: 1,
       })
     const res = await request(app)
@@ -71,6 +90,7 @@ describe('UserController', () => {
         name: 'Luciano Zangeronimo',
         email,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
         active: 1,
       })
     expect(res.status).toBe(409)
@@ -85,6 +105,7 @@ describe('UserController', () => {
         name: 'Luciano Zangeronimo',
         email: 'zangeronimo@gmail.com',
         companies: [companyId],
+        credentials: [],
         active: 1,
       })
     expect(res.status).toBe(404)
@@ -92,64 +113,26 @@ describe('UserController', () => {
       Messages.notFound(`Company ID "${companyId}"`),
     )
   })
+})
 
-  it('should be able to getAll users', async () => {
-    const res = await request(app).get(BASE_URL)
-    expect(res.status).toBe(200)
-    expect(res.body).toStrictEqual([])
-  })
-
-  it('should be able to getAll with users', async () => {
-    const user = await request(app)
-      .post(BASE_URL)
-      .send({
-        name: 'Luciano Zangeronimo',
-        email: 'zangeronimo@gmail.com',
-        companies: [VALID_COMPANY_ID],
-        active: 1,
-      })
-    expect(user.status).toBe(201)
-    const res = await request(app).get(BASE_URL)
-    expect(res.status).toBe(200)
-    expect(res.body).toHaveLength(1)
-  })
-
-  it('should return a persisted user by ID', async () => {
-    const UserBody = {
-      name: 'Luciano Zangeronimo',
-      email: 'zangeronimo@gmail.com',
-      active: 1,
-      companies: [VALID_COMPANY_ID],
-    }
-    const userCreated = await request(app).post(BASE_URL).send(UserBody)
-    expect(userCreated.status).toBe(201)
-    const user = await request(app).get(`${BASE_URL}/${userCreated.body.id}`)
-    expect(user.body.id).toBe(userCreated.body.id)
-    const companyDto = CompanyDto.from(COMPANY)
-    expect(user.body.companies).toStrictEqual([companyDto])
-  })
-
-  it('should return an exception if user not exist', async () => {
-    const id = '1234'
-    const user = await request(app).get(`${BASE_URL}/${id}`)
-    expect(user.status).toBe(404)
-    expect(user.body.message).toBe(Messages.notFound(`User "${id}"`))
-  })
-
+describe('test POST in /users', () => {
   it('should update a persisted user', async () => {
     const UserBody = {
       name: 'Luciano Zangeronimo',
       email: 'zangeronimo@gmail.com',
       active: 1,
       companies: [VALID_COMPANY_ID],
+      credentials: [{ systemId: SYSTEM.id, password: '123', active: true }],
     }
     const created = await request(app).post(BASE_URL).send(UserBody)
+    const credentialId = created.body.credentials[0].id
     const UpdateBody = {
       id: created.body.id,
       name: created.body.name,
       email: created.body.email,
       active: 0,
       companies: [VALID_COMPANY_ID],
+      credentials: [{ id: credentialId, active: false }],
     }
     const updated = await request(app)
       .put(`${BASE_URL}/${UpdateBody.id}`)
@@ -160,6 +143,8 @@ describe('UserController', () => {
     expect(user.body.id).toBe(created.body.id)
     expect(user.body.id).toBe(created.body.id)
     expect(user.body.active).toBe(UpdateBody.active)
+    expect(user.body.credentials[0].id).toBe(credentialId)
+    expect(user.body.credentials[0].active).toBeFalsy()
   })
 
   it('should receive an exception if param id not equal body id', async () => {
@@ -170,6 +155,7 @@ describe('UserController', () => {
         email: 'zangeronimo@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     const UpdateBody = {
       id: created.body.id,
@@ -177,6 +163,7 @@ describe('UserController', () => {
       email: 'zangeronimo@gmail.com',
       active: 0,
       companies: [VALID_COMPANY_ID],
+      credentials: [],
     }
     const res = await request(app).put(`${BASE_URL}/${1234}`).send(UpdateBody)
     expect(res.status).toBe(409)
@@ -191,6 +178,7 @@ describe('UserController', () => {
         email: 'zangeronimo@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     const created = await request(app)
       .post(BASE_URL)
@@ -199,6 +187,7 @@ describe('UserController', () => {
         email: 'zangeronimo2@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     const UpdateBody = {
       id: created.body.id,
@@ -206,6 +195,7 @@ describe('UserController', () => {
       email: 'zangeronimo@gmail.com',
       active: 0,
       companies: [VALID_COMPANY_ID],
+      credentials: [],
     }
     const res = await request(app)
       .put(`${BASE_URL}/${UpdateBody.id}`)
@@ -224,6 +214,7 @@ describe('UserController', () => {
         email: 'zangeronimo@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     const companyId = '1234'
     const UpdateBody = {
@@ -232,6 +223,7 @@ describe('UserController', () => {
       email: 'zangeronimo@gmail.com',
       active: 0,
       companies: [companyId],
+      credentials: [],
     }
     const res = await request(app)
       .put(`${BASE_URL}/${UpdateBody.id}`)
@@ -240,6 +232,53 @@ describe('UserController', () => {
     expect(res.body.message).toBe(
       Messages.notFound(`Company ID "${companyId}"`),
     )
+  })
+})
+
+describe('UserController', () => {
+  it('should be able to getAll users', async () => {
+    const res = await request(app).get(BASE_URL)
+    expect(res.status).toBe(200)
+    expect(res.body).toStrictEqual([])
+  })
+
+  it('should be able to getAll with users', async () => {
+    const user = await request(app)
+      .post(BASE_URL)
+      .send({
+        name: 'Luciano Zangeronimo',
+        email: 'zangeronimo@gmail.com',
+        companies: [VALID_COMPANY_ID],
+        credentials: [],
+        active: 1,
+      })
+    expect(user.status).toBe(201)
+    const res = await request(app).get(BASE_URL)
+    expect(res.status).toBe(200)
+    expect(res.body).toHaveLength(1)
+  })
+
+  it('should return a persisted user by ID', async () => {
+    const UserBody = {
+      name: 'Luciano Zangeronimo',
+      email: 'zangeronimo@gmail.com',
+      active: 1,
+      companies: [VALID_COMPANY_ID],
+      credentials: [],
+    }
+    const userCreated = await request(app).post(BASE_URL).send(UserBody)
+    expect(userCreated.status).toBe(201)
+    const user = await request(app).get(`${BASE_URL}/${userCreated.body.id}`)
+    expect(user.body.id).toBe(userCreated.body.id)
+    const companyDto = CompanyDto.from(COMPANY)
+    expect(user.body.companies).toStrictEqual([companyDto])
+  })
+
+  it('should return an exception if user not exist', async () => {
+    const id = '1234'
+    const user = await request(app).get(`${BASE_URL}/${id}`)
+    expect(user.status).toBe(404)
+    expect(user.body.message).toBe(Messages.notFound(`User "${id}"`))
   })
 
   it('should be able to delete a User', async () => {
@@ -250,6 +289,7 @@ describe('UserController', () => {
         email: 'zangeronimo@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     const res = await request(app).delete(`${BASE_URL}/${created.body.id}`)
     expect(res.status).toBe(204)
@@ -275,6 +315,7 @@ describe('UserController', () => {
         email: 'zangeronimo@gmail.com',
         active: 1,
         companies: [VALID_COMPANY_ID],
+        credentials: [],
       })
     expect(created.status).toBe(201)
     const res = await request(app).patch(`${BASE_URL}/${created.body.id}/0`)

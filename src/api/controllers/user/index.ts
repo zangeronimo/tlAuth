@@ -1,3 +1,4 @@
+import { UserCredentialsModel } from '@application/models/users/user-credentials.model'
 import { UserDto } from '@domain/dto/user.dto'
 import { ConflictError } from '@domain/errors/conflict.error'
 import { EmailAlreadyExistsError } from '@domain/errors/email.already.exists.error'
@@ -19,13 +20,18 @@ export class UserRouters {
   getAllUC = container.resolve<UseCase<undefined, UserDto[]>>('UserGetAllUC')
   getByIdUC =
     container.resolve<UseCase<string, UserDto | undefined>>('UserGetByIdUC')
-  createUC =
-    container.resolve<
-      UseCase<
-        { name: string; email: string; active: number; companies: string[] },
-        UserDto
-      >
-    >('UserCreateUC')
+  createUC = container.resolve<
+    UseCase<
+      {
+        name: string
+        email: string
+        active: number
+        companies: string[]
+        credentials: UserCredentialsModel[]
+      },
+      UserDto
+    >
+  >('UserCreateUC')
   updateUC = container.resolve<
     UseCase<
       {
@@ -34,6 +40,7 @@ export class UserRouters {
         email: string
         active: number
         companies: []
+        credentials: UserCredentialsModel[]
       },
       UserDto
     >
@@ -46,12 +53,24 @@ export class UserRouters {
 
   private createAsync = async (req: Request, res: Response) => {
     try {
-      const { name, email, active, companies } = req.body
+      const { name, email, active, companies, credentials } = req.body
+      const userCredentials: UserCredentialsModel[] =
+        credentials?.map(
+          (credential: any) =>
+            new UserCredentialsModel(
+              credential.systemId,
+              credential.active,
+              credential.password,
+              credential.id,
+            ),
+        ) ?? []
+
       const result = await this.createUC.executeAsync({
         name,
         email,
         active,
         companies,
+        credentials: userCredentials,
       })
       res.status(201).json(result)
     } catch (e: any) {
@@ -90,7 +109,18 @@ export class UserRouters {
   private updateAsync = async (req: Request, res: Response) => {
     try {
       const { id: paramId } = req.params
-      const { id, name, email, active, companies } = req.body
+      const { id, name, email, active, companies, credentials } = req.body
+
+      const userCredentials: UserCredentialsModel[] =
+        credentials?.map(
+          (credential: any) =>
+            new UserCredentialsModel(
+              credential.systemId,
+              credential.active,
+              credential.password,
+              credential.id,
+            ),
+        ) ?? []
 
       if (id !== paramId) throw new ConflictError('Param ID', 'Body ID')
 
@@ -100,6 +130,7 @@ export class UserRouters {
         email,
         active,
         companies,
+        credentials: userCredentials,
       })
       res.status(200).json(result)
     } catch (e: any) {
